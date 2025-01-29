@@ -4,9 +4,10 @@ project(IDKPhysics)
 
 file(
     GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/body/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/shape/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/body/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/shape/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/constraint/*.cpp
 )
 
 
@@ -23,12 +24,12 @@ target_link_libraries(
 )
 
 
-file(
-    GLOB PUBLIC_HEADER
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
-)
-
 install(
     FILES ${PUBLIC_HEADER}
     DESTINATION ${CMAKE_SOURCE_DIR}/build/include/${PROJECT_NAME}/
+)
+
+FILE(
+    COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}
+    DESTINATION ${IDK_OUTPUT_DIRECTORY}/include/.
 )

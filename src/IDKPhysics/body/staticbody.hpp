@@ -12,6 +12,5 @@ private:
     glm::quat m_rot;
 
 public:
-    StaticBody( idk::phys::World&, const glm::vec3& );
-    ~StaticBody();
+    StaticBody( idk::phys::World&, const glm::vec3 &p=glm::vec3(0), Shape *shape=nullptr );
 };
