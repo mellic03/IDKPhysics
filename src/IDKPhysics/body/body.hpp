@@ -2,18 +2,14 @@
 #include "../common.hpp"
 #include "../shape/shape.hpp"
 #include "./state.hpp"
+#include <deque>
 #include <functional>
 
 
-class idk::phys::BodyState
+namespace idk::phys
 {
-public:
-    BodyState( const glm::vec3 &p );
-
-    glm::vec3 pos;
-    glm::quat rot;
-};
-
+    class CollisionInfo;
+}
 
 
 class idk::phys::Body
@@ -21,76 +17,107 @@ class idk::phys::Body
 private:
     friend class World;
     int m_id;
-    glm::vec3 m_up, m_right, m_front;
+    // std::deque<KinematicState> *history = nullptr;
 
 protected:
-    // enum prop_idx {
-    //     IDX_MASS       = 0,
-    //     IDX_DRAG       = 1,
-    //     IDX_RESTITUION = 2,
-    //     IDX_GRAVSCALE  = 3
-    // };
-
-    // enum prop_bit {
-    //     BIT_MASS       = 1<<IDX_MASS,
-    //     BIT_DRAG       = 1<<IDX_DRAG,
-    //     BIT_RESTITUION = 1<<IDX_RESTITUION,
-    //     BIT_GRAVSCALE  = 1<<IDX_GRAVSCALE
-    // };
-
-    // uint32_t m_bitflags = 0; 
-    float m_mass, m_drag, m_restitution, m_gravscale;
-
     World    &m_world;
-    Shape    *m_shape;
-
-    KinematicState m_prev_state;
-    KinematicState m_lerp, m_prevlerp;
-
+    float     m_staticCoefficient = 1.0f;
 
 public:
-    // KinematicState lspace, state;
-    KinematicState state;
-
-    // Body *m_parent = nullptr;
-    float invMass;
+    KinematicState &state;
+    Shape           shape;
 
     std::function<void(const CollisionInfo&)> onCollisionEnter = [](const CollisionInfo&){};
     std::function<void(const CollisionInfo&)> onCollisionExit  = [](const CollisionInfo&){};
 
-    Body( World&, const glm::vec3 &p=glm::vec3(0), Shape *shape=nullptr );
+    Body( World&, KinematicState&, phys::shape_type stype = SHAPE_SPHERE );
+    Body( World&, KinematicState&, const Shape& );
     virtual ~Body() = default;
-
-    virtual void update( float alpha );
-    virtual void swapStates();
-
-    void  updateTransforms();
-    bool  collides( Body*, CollisionInfo *info = nullptr );
-    bool  raycast( const glm::vec3 &ro, const glm::vec3 &rd, glm::vec3 *hit, glm::vec3 *N );
 
     const int getID() const { return m_id; };
     const int getID()       { return m_id; };
 
+
+    virtual void update( float alpha );
+    virtual void integrate( float dt );
+
     World &getWorld() { return m_world; };
 
     template <typename T=idk::phys::Shape>
-    T *getShape() { return dynamic_cast<T*>(m_shape); };
+    T *getShape() { return dynamic_cast<T*>(shape); };
 
     glm::mat4 getRenderMatrix( bool scale=false );
-    glm::mat4 getRenderMatrixPrev( bool scale=false );
-
-    const glm::vec3 &getUp()    { return m_up; }
-    const glm::vec3 &getRight() { return m_right; }
-    const glm::vec3 &getFront() { return m_front; }
 
 
-    virtual void  setMass( float ); 
-    virtual void  setDrag( float ); 
-    virtual void  setRestitution( float ); 
-    virtual void  setGravScale( float );
+    // KinematicState &operator->() { return state; }
+    // const KinematicState &operator->() const { return state; }
 
-    virtual float getMass();
-    virtual float getDrag();
-    virtual float getRestitution();
-    virtual float getGravScale();
+    // auto applyTranslation = state::applyTranslation;
+
+    float getMass();
+    void  setMass( float m );
+
+    void  applyTranslation( const glm::vec3& );
+
+    void  applyImpulse( const glm::vec3 &worldVel, const glm::vec3 &worldPoint );
+    void  applyImpulseLinear( const glm::vec3 &worldVel );
+    void  applyImpulseAngular( const glm::vec3 &worldAxis );
+    void  applyImpulseAngular( const glm::vec3 &worldVel, const glm::vec3 &worldPoint );
+
+    void  applyForce( const glm::vec3 &worldAcc, const glm::vec3 &worldPoint );
+    void  applyForceLinear( const glm::vec3 &worldAcc );
+    void  applyForceAngular( const glm::vec3 &worldAxis );
+    void  applyForceAngular( const glm::vec3 &worldAcc, const glm::vec3 &worldPoint );
+
+    glm::vec3 computeTorque( const glm::vec3 &worldAcc, const glm::vec3 &worldPoint );
+
+    void  updateTransforms();
+    void  clearForces();
+
 };
+
+
+
+
+// template <typename body_type>
+// struct idk::phys::Body
+// {
+// private:
+//     friend class phys::World;
+//     inline static KinematicState dummy;
+
+// public:
+//     Body       *impl;
+//     Shape          *shape;
+//     KinematicState &state;
+
+//     Body( body_type *B, KinematicState &st = Body::dummy )
+//     :   impl  (dynamic_cast<Body*>(B)),
+//         state (st),
+//         shape (impl->shape)
+//     {
+
+//     }
+
+//     const int getID() const { return impl->m_id; };
+//     const int getID()       { return impl->m_id; };
+
+//     glm::mat4 getRenderMatrix( bool scale=false )
+//     {
+//         return state.T;
+//         // state.
+//     }
+
+
+//     template <typename T>
+//     Body<T> cast()
+//     {
+//         return Body<T>(dynamic_cast<T*>(impl), state);
+//     }
+
+//     template <typename T>
+//     const Body<T> cast() const
+//     {
+//         return Body<T>(dynamic_cast<T*>(impl), state);
+//     }
+// };

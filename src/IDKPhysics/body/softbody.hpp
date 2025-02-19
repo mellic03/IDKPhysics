@@ -3,7 +3,7 @@
 #include "body.hpp"
 
 
-class idk::phys::SoftBody: public idk::phys::Body
+class idk::phys::SoftBody: public phys::Body
 {
 public:
     using Body::Body;

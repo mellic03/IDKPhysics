@@ -5,7 +5,13 @@
 
 namespace idk::phys
 {
+    struct BodyWrapper;
     class BodyState;
+
+    // class Body;
+
+    // template <typename body_type, typename shape_type>
+    // template <typename body_type>
     class Body;
 
     class StaticBody;
@@ -20,8 +26,6 @@ namespace idk::phys
 
     class WorldConfig;
     class World;
-
-    glm::vec3 computeTorqueAngularForce( const glm::vec3 &offset, const glm::vec3 &F );
 
     // using vec2type = glm::vec2;
     // using vec3type = glm::vec3;

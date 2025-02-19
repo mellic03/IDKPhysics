@@ -54,28 +54,28 @@ idk::phys::approxAirDensity( float altitude )
 void
 idk::phys::createRope( World &world, RigidBody *root )
 {
-    auto *ree = world.createBody<VerletBody>(glm::vec3(0, 16, 0));
-          ree->setMass(1.0f);
-          ree->setDrag(0.001f);
-          ree->m_static = true;
+    // auto *ree = world.createBody<VerletBody>(glm::vec3(0, 16, 0));
+    //       ree->setMass(1.0f);
+    //       ree->state.drag = 0.001f;
+    //       ree->m_static = true;
 
-    world.createConstraint<GlueConstraint>(root, ree, glm::vec3(0, -4, -4));
+    // world.createConstraint<GlueConstraint>(root, ree, glm::vec3(0, -4, -4));
 
-    glm::vec3   pos  = ree->state.pos + glm::vec3(0.25, -1, 0);
-    VerletBody *tail = ree;
+    // glm::vec3   pos  = ree->state.pos + glm::vec3(0.25, -1, 0);
+    // VerletBody *tail = ree;
 
-    for (int i=0; i<16; i++)
-    {
-        auto *next = world.createBody<VerletBody>(pos);
-              next->setMass(2.5f);
-              next->setDrag(0.001f);
+    // for (int i=0; i<16; i++)
+    // {
+    //     auto *next = world.createBody<VerletBody>(pos);
+    //           next->setMass(2.5f);
+    //           next->state.drag = 0.001f;
 
-        world.createConstraint<VerletConstraint>(tail, next, 2.5f);
+    //     world.createConstraint<VerletConstraint>(tail, next, 2.5f);
     
-        pos += glm::vec3(0.25, -1, 0);
-        tail = next;
-    }
+    //     pos += glm::vec3(0.25, -1, 0);
+    //     tail = next;
+    // }
 
-    tail->setMass(8.0f);
+    // tail->setMass(8.0f);
 }
 

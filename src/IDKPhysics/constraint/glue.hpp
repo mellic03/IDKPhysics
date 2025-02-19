@@ -15,6 +15,6 @@ private:
     glm::vec3 m_offset;
 
 public:
-    GlueConstraint( RigidBody *A, RigidBody *B, const glm::vec3 &offset );
+    GlueConstraint( Body *A, Body *B, const glm::vec3 &offset );
     virtual void integrate( float dt ) final;
 };

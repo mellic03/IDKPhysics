@@ -1,60 +1,28 @@
-#include "AABB.hpp"
-#include "OBB.hpp"
-#include "sphere.hpp"
-#include "heightmap.hpp"
-#include "collision.hpp"
-#include <IDKPhysics/body/body.hpp>
-#include "../query.hpp"
+// #include "AABB.hpp"
+// #include <IDKPhysics/body/body.hpp>
+// #include "../query.hpp"
 
-using namespace idk::phys;
+// using namespace idk::phys;
 
 
-ShapeAABB::ShapeAABB( const glm::vec3 &extents )
-:   Shape(extents) {  }
+// ShapeAABB::ShapeAABB( const glm::vec3 &extents )
+// :   Shape(SHAPE_AABB, extents) {  }
 
-ShapeAABB::ShapeAABB( float w, float h, float d )
-:   ShapeAABB(glm::vec3(w, h, d)) {  }
-
-
-bool
-ShapeAABB::raycast( const glm::vec3 &ro, const glm::vec3 &rd, glm::vec3 *hit, glm::vec3 *N )
-{
-    return false;
-}
+// ShapeAABB::ShapeAABB( float w, float h, float d )
+// :   ShapeAABB(glm::vec3(w, h, d)) {  }
 
 
-float
-ShapeAABB::getArea( const glm::vec3 &dir )
-{
-    return extents.x;
-}
-
-
-bool
-ShapeAABB::collides( Shape *other, CollisionInfo *info )
-{
-    SHAPE_COLLISION_LAZY(AABB, AABB);
-    SHAPE_COLLISION_LAZY(AABB, Heightmap);
-    SHAPE_COLLISION_LAZY(AABB, OBB);
-    SHAPE_COLLISION_LAZY(AABB, Sphere);
-    return false;
-}
-
-
-// template <>
 // bool
-// ShapeAABB::_collides<ShapeAABB>( Shape *shape, CollisionInfo *info )
+// ShapeAABB::raycast( const glm::vec3 &ro, const glm::vec3 &rd,
+//                     glm::vec3 *hit, glm::vec3 *N )
 // {
-//     return collisionCuboidCuboid(*this, *dynamic_cast<ShapeAABB*>(shape), info);
+//     return false;
 // }
 
 
-// template <>
-// bool
-// ShapeAABB::_collides<ShapeSphere>( Shape *shape, CollisionInfo *info )
+// float
+// ShapeAABB::getArea( const glm::vec3 &dir )
 // {
-//     return collisionCuboidSphere(*this, *dynamic_cast<ShapeSphere*>(shape), info);
+//     return extents.x;
 // }
-
-
 

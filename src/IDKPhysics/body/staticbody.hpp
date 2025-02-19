@@ -8,9 +8,8 @@ class idk::phys::StaticBody: public idk::phys::Body
 private:
     friend class World;
 
-    glm::vec3 m_pos;
-    glm::quat m_rot;
-
 public:
-    StaticBody( idk::phys::World&, const glm::vec3 &p=glm::vec3(0), Shape *shape=nullptr );
+    StaticBody( idk::phys::World&, KinematicState&, phys::shape_type stype = SHAPE_SPHERE );
+    StaticBody( idk::phys::World&, KinematicState&, const Shape& );
 };
+

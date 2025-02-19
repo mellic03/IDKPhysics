@@ -7,6 +7,7 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/body/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/shape/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/collision/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKPhysics/constraint/*.cpp
 )
 

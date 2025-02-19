@@ -5,7 +5,8 @@
 using namespace idk::phys;
 
 
-GlueConstraint::GlueConstraint( RigidBody *A, RigidBody *B, const glm::vec3 &offset )
+GlueConstraint::GlueConstraint( Body *A, Body *B,
+                                const glm::vec3 &offset )
 :   Constraint(A, B),
     m_offset(offset)
 {

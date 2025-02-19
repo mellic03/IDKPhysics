@@ -1,8 +1,4 @@
 #include "sphere.hpp"
-#include "AABB.hpp"
-#include "OBB.hpp"
-#include "heightmap.hpp"
-#include "collision.hpp"
 #include <IDKPhysics/body/body.hpp>
 #include <libidk/idk_math.hpp>
 #include "../query.hpp"
@@ -11,7 +7,7 @@ using namespace idk::phys;
 
 
 ShapeSphere::ShapeSphere( float r )
-:   Shape(glm::vec3(r, r, r)),
+:   Shape(SHAPE_SPHERE, glm::vec3(r, r, r)),
     radius(extents[0])
 {
 
@@ -33,15 +29,15 @@ ShapeSphere::getArea( const glm::vec3 &dir )
 }
 
 
-bool
-ShapeSphere::collides( Shape *other, CollisionInfo *info )
-{
-    SHAPE_COLLISION_LAZY(Sphere, AABB);
-    SHAPE_COLLISION_LAZY(Sphere, OBB);
-    SHAPE_COLLISION_LAZY(Sphere, Heightmap);
-    SHAPE_COLLISION_LAZY(Sphere, Sphere);
-    return false;
-}
+// bool
+// ShapeSphere::collides( Shape *other, CollisionInfo *info )
+// {
+//     // SHAPE_COLLISION_LAZY(Sphere, AABB);
+//     // SHAPE_COLLISION_LAZY(Sphere, OBB);
+//     SHAPE_COLLISION_LAZY(Sphere, Heightmap);
+//     // SHAPE_COLLISION_LAZY(Sphere, Sphere);
+//     return false;
+// }
 
 
 // template <>

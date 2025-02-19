@@ -1,16 +1,16 @@
-#pragma once
-#include "shape.hpp"
+// #pragma once
+// #include "shape.hpp"
 
 
-class idk::phys::ShapeOBB: public Shape
-{
-public:
-    ShapeOBB( const glm::vec3 &extents );
-    ShapeOBB( float w, float h, float d );
+// // class idk::phys::ShapeOBB: public Shape
+// // {
+// // public:
+// //     ShapeOBB( const glm::vec3 &extents );
+// //     ShapeOBB( float w, float h, float d );
 
-    virtual bool  raycast( const glm::vec3&, const glm::vec3&, glm::vec3*, glm::vec3* );
-    virtual float getArea( const glm::vec3& );
-    virtual bool  collides( Shape*, CollisionInfo *info=nullptr );
-};
+// //     virtual bool  raycast( const glm::vec3&, const glm::vec3&, glm::vec3*, glm::vec3* ) override;
+// //     virtual float getArea( const glm::vec3& );
+// //     // virtual bool  collides( Shape*, CollisionInfo *info=nullptr );
+// // };
 
 

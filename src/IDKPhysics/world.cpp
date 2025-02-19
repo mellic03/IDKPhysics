@@ -1,101 +1,68 @@
 #include "world.hpp"
 #include "query.hpp"
 #include "body.hpp"
+#include "collision/collision.hpp"
 
 
 idk::phys::WorldConfig::WorldConfig()
 {
     tickrate      = 60;
-    substeps      = 4;
+    substeps      = 1;
     fluid_density = 1.225f;
     gravity       = glm::vec3(0.0, 0.0, 0.0);
 }
 
 
-idk::phys::World::World()
-:   m_accum(0.0f)
+idk::phys::World::World( uint32_t maxBodies )
+:   BodyManager (maxBodies),
+    m_accum     (0.0f)
 {
-    // T = -131.21 + 0.00299*h
-    // density ~= p / (0.2869 * (T + 273.1))
-
+    phys::registerMethods();
 }
 
 
 idk::phys::World::~World()
 {
-    for (auto *B: m_rigid_bodies)
-    {
-        delete B;
-    }
+    // for (auto *B: m_rigid_bodies)
+    // {
+    //     delete B;
+    // }
 }
 
 
-void
-idk::phys::World::_find_collisions( float dt )
-{
-    m_collision_list.clear();
-    // _find_collisions(m_rigid_bodies, m_rigid_bodies);
-    _find_collisions(m_rigid_bodies, m_static_bodies);
-}
-
-
-void
-idk::phys::World::_resolve_collisions( float dt )
-{
-    for (auto &info: m_collision_list)
-    {
-        info.A.body->onCollisionEnter(info);
-        std::swap(info.A, info.B);
-        info.A.body->onCollisionEnter(info);
-    }
-}
-
-
-void
-idk::phys::World::_integrate( float dt )
-{
-    _find_collisions(dt);
-    _resolve_collisions(dt);
-
-    for (auto *B: m_rigid_bodies)
-    {
-        B->integrate(dt);
-    }
-
-    for (auto &[id, C]: m_constraints)
-    {
-        if (C)
-        {
-            C->integrate(dt);
-        }
-    }
-}
 
 
 void
 idk::phys::World::update( float dt )
 {
-    const float timestep   = 1.0f / float(config.tickrate);
-    const float dt_substep = timestep / float(config.substeps);
+    const float timestep = 1.0f / float(config.tickrate);
+    const int   substeps = config.substeps;
+    // const float dt_substep = timestep / float(config.substeps);
 
     m_accum += dt;
-    // m_accum = glm::min(m_accum+dt, 4.0f*timestep);
 
     while (m_accum >= timestep)
     {
-        for (auto *B: m_rigid_bodies)
+        for (int i=0; i<m_states.size(); i++)
         {
-            B->swapStates();
+            // m_history[i].push_back(m_states[i]);
+
+            // if (m_history[i].size() > 8)
+            // {
+            //     m_history[i].pop_front();
+            // }
         }
 
-        for (int i=0; i<config.substeps; i++)
+        for (int i=0; i<substeps; i++)
         {
-            _integrate(dt_substep);
+            _find_collisions(timestep);
+            m_collisions.resolve();
+            BodyManager::_integrate(timestep, substeps);
         }
 
         for (auto *B: m_rigid_bodies)
         {
-            B->clearForces();
+            B->state.clearForces();
         }
 
         m_accum -= timestep;
@@ -106,15 +73,11 @@ idk::phys::World::update( float dt )
 
     for (auto *B: m_rigid_bodies)
     {
+        // auto k = KinematicState::mix(history.back(), state, alpha);
+        // m_lerp = KinematicState::mix(m_prev_state, state, alpha);
+
         B->update(alpha);
     }
-}
-
-
-void
-idk::phys::World::deleteConstraint( int id )
-{
-    m_constraints.destroy(id);
 }
 
 
@@ -127,30 +90,83 @@ idk::phys::World::raycast( const glm::vec3 &ro, const glm::vec3 &rd,
     glm::vec3 nearest_N   = glm::vec3(0.0f);
     float     nearest_dSq = INFINITY;
 
-    for (auto *B: m_bodies)
-    {
-        if (B->raycast(ro, rd, hit, N) == false)
-        {
-            continue;
-        }
+    // for (auto &wrapper: m_bodies)
+    // {
+    //     auto *B     = wrapper.body.get();
+    //     auto &state = wrapper.state;
 
-        float dSq = glm::distance2(B->state.pos, *hit);
+    //     if (B->getShape()->raycast(state, ro, rd, hit, N) == false)
+    //     {
+    //         continue;
+    //     }
 
-        if (dSq < nearest_dSq)
-        {
-            nearest_hit = *hit;
-            nearest_N   = *N;
-            nearest_dSq = dSq;
-            *body = B;
-        }
-    }
+    //     float dSq = glm::distance2(state.pos, *hit);
 
-    if (nearest_dSq < INFINITY)
-    {
-        *hit = nearest_hit;
-        *N   = nearest_N;
-        return true;
-    }
+    //     if (dSq < nearest_dSq)
+    //     {
+    //         nearest_hit = *hit;
+    //         nearest_N   = *N;
+    //         nearest_dSq = dSq;
+    //         *body = B;
+    //     }
+    // }
+
+    // if (nearest_dSq < INFINITY)
+    // {
+    //     *hit = nearest_hit;
+    //     *N   = nearest_N;
+    //     return true;
+    // }
 
     return false;
+}
+
+
+
+
+
+
+
+
+
+void
+idk::phys::World::_find_collisions( float dt )
+{
+    CollisionInfo info;
+
+    for (RigidBody *A: BodyManager::rigidBodies())
+    {
+        for (StaticBody *B: BodyManager::staticBodies())
+        {
+            if (m_collisions.contains(A, B))
+            {
+                continue;
+            }
+
+            if (phys::detectCollisionShapeShape(&A->shape, &B->shape, info))
+            {
+                m_collisions.insert(info);
+            }
+        }
+    }
+
+    // for (int i=0; i<m_rigid_bodies.size(); i++)
+    // {
+    //     for (int j=i+1; j<m_rigid_bodies.size(); j++)
+    //     {
+    //         auto *A = m_rigid_bodies[i];
+    //         auto *B = m_rigid_bodies[j];
+
+    //         if (m_collisions.contains(A, B))
+    //         {
+    //             continue;
+    //         }
+
+    //         if (phys::detectCollisionShapeShape(&A->shape, &B->shape, info))
+    //         {
+    //             m_collisions.insert(info);
+    //         }
+    //     }
+    // }
+
 }

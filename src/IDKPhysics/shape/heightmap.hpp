@@ -13,9 +13,11 @@ public:
     // ShapeHeightmap( uint32_t w, uint32_t h, void *pixels );
     ShapeHeightmap();
 
-    virtual bool  raycast( const glm::vec3&, const glm::vec3&, glm::vec3*, glm::vec3* ) override;
+    virtual bool  raycast( const glm::vec3&, const glm::vec3&,
+                           glm::vec3*, glm::vec3* ) override;
+
     virtual float getArea( const glm::vec3& );
 
-    virtual bool  collides( Shape*, CollisionInfo *info=nullptr );
+    // virtual bool  collides( Shape*, CollisionInfo *info=nullptr );
 
 };

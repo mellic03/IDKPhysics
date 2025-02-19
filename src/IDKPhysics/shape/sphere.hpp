@@ -8,9 +8,12 @@ public:
     float &radius;
     ShapeSphere( float radius = 1.0f );
 
-    virtual bool  raycast( const glm::vec3&, const glm::vec3&, glm::vec3*, glm::vec3* );
+
+    virtual bool  raycast( const glm::vec3&, const glm::vec3&,
+                           glm::vec3*, glm::vec3* ) override;
+
     virtual float getArea( const glm::vec3& );
-    virtual bool  collides( Shape*, CollisionInfo *info=nullptr );
+    // virtual bool  collides( Shape*, CollisionInfo *info=nullptr );
 
 };
 

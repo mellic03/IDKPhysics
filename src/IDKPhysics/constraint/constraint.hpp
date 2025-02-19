@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../body/body.hpp"
 
 namespace idk::phys
 {
@@ -15,12 +15,13 @@ private:
     int m_id;
 
 protected:
-    RigidBody *m_A;
-    RigidBody *m_B;
+    Body *m_A;
+    Body *m_B;
 
 public:
-    Constraint( RigidBody *A, RigidBody *B )
-    :   m_A(A), m_B(B)
+
+    Constraint( Body *A, Body *B )
+    :   m_A(A), m_B(A)
     {
         
     }
@@ -28,8 +29,8 @@ public:
     const int getID() const { return m_id; };
     const int getID()       { return m_id; };
 
-    RigidBody *getBodyA() { return m_A; };
-    RigidBody *getBodyB() { return m_B; };
+    // RigidBody *getBodyA() { return m_A; };
+    // RigidBody *getBodyB() { return m_B; };
 
     virtual void integrate( float dt ) = 0;
 };

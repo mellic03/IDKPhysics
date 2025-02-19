@@ -9,17 +9,24 @@
 using namespace idk::phys;
 
 
-RigidBody::RigidBody( World &world, const glm::vec3 &pos, Shape *shape )
-:   Body(world, pos, shape)
+RigidBody::RigidBody( World &world, KinematicState &st, const Shape &S )
+:   Body(world, st, S)
 {
-    _onChange();
-    integrate(1.0f/60.0f);
+    // _onChange();
 
-    onCollisionEnter = [this](const phys::CollisionInfo &info)
-    {
-        return _defaultOnCollisionEnter(info);
-    };
+    // onCollisionEnter = [this](const phys::CollisionInfo &info)
+    // {
+    //     _defaultOnCollisionEnter(info);
+    // };
 }
+
+
+RigidBody::RigidBody( World &world, KinematicState &st, shape_type stype )
+:   RigidBody(world, st, Shape(stype))
+{
+
+}
+
 
 
 
@@ -27,81 +34,171 @@ void
 RigidBody::update( float alpha )
 {
     Body::update(alpha);
-    // float radius = std::pow(m_mass / (4.0f/3.0f * idk::PI), 1.0f/3.0f);
-    // m_shape->extents = glm::vec3(0.5f * radius);
-}
-
-
-
-
-float
-RigidBody::_computeTotalMass()
-{
-    float totalMass = m_mass;
-
-    for (auto *B: m_children)
-    {
-        totalMass += B->getMass();
-    }
-
-    return totalMass;
-}
-
-
-glm::vec3
-RigidBody::_computeCOM( float totalMass )
-{
-    auto COM = glm::vec3(0.0f);
-
-    for (auto *B: m_children)
-    {
-        COM += B->getMass() * (B->state.pos - this->state.pos);
-    }
-
-    return COM / totalMass;
-}
-
-
-glm::mat3
-RigidBody::_computeIntertiaTensor( const glm::vec3 &COM )
-{
-    auto I = glm::mat3(0.0f);
-
-    for (auto *B: m_children)
-    {
-        glm::vec3 r = (B->state.pos - this->state.pos) - COM;
-        float     m = B->getMass();
-
-        I += m * (glm::length2(r) * glm::mat3(1.0f) - glm::outerProduct(r, r));
-    }
-
-    return I;
+    // float radius = std::pow(1.0f/state.invMass / (4.0f/3.0f * idk::PI), 1.0f/3.0f);
+    // shape->extents = glm::vec3(0.5f * radius);
 }
 
 
 void
-RigidBody::_onChange()
+RigidBody::integrate( float dt )
 {
-    m_totalMass = _computeTotalMass();
-    invMass     = 1.0f / m_totalMass;
-    m_COM       = _computeCOM(m_totalMass);
+    auto  &conf = m_world.config;
+    float factor = 1.0f / conf.substeps;
 
-    updateTransforms();
+    applyForceLinear(computeAeroForcesLinear());
+    applyForceAngular(computeAeroForcesAngular());
 
-    Inertia.local        = _computeIntertiaTensor(m_COM);
-    Inertia.inverse      = glm::inverse(Inertia.local);
-    Inertia.world        = state.T3 * Inertia.local * state.invT3;
-    Inertia.inverseWorld = glm::inverse(Inertia.world);
+
+    // glm::vec3 aero = computeAeroForcesAngular();
+
+    // updateTransforms();
+    // float totalMass = _computeTotalMass();
+    // state.COM   = _computeCOM(totalMass);
+    // updateTransforms();
+
+    // state.I    = _computeIntertiaTensor(state.COM);
+    // state.Iwi  = glm::mat3(state.T) * state.I * glm::mat3(state.Ti);
+    // state.Iwi = glm::inverse(state.Iwi);
+    // computeGravitationalAcceleration();
+
+    // _integrateLinear(dt, factor);
+    // _integrateAngular(dt, factor);
+    // updateTransforms();
+    // clearForces();
 }
 
+
+
+// void
+// RigidBody::_integrateLinear( float dt, float factor )
+// {
+//     auto &acc = state.linear.acc;
+//     auto &vel = state.linear.vel;
+//     auto &pos = state.pos;
+
+//     auto F = state.linear.dAcc + computeAeroForcesLinear();
+
+//     acc  = invMass * F;
+//     vel += dt*acc + invMass * (state.linear.dVel);
+//     pos += dt*vel;
+// }
+
+
+// void
+// RigidBody::_integrateAngular( float dt, float factor )
+// {
+//     static constexpr float damping = 0.025f;
+
+//     auto &acc = state.angular.acc;
+//     auto &vel = state.angular.vel;
+//     auto &rot = state.rot;
+
+//     acc  = Inertia.inverseWorld * state.angular.dAcc; // + G;
+//     vel += dt*acc + Inertia.inverseWorld * state.angular.dVel;
+//     vel *= (1.0f - dt*damping);
+
+//     float magSq = glm::length2(state.angular.vel);
+//     if (magSq < 1e-12f)
+//     {
+//         vel = glm::vec3(0.0f);
+//         return;
+//     }
+
+//     float mag = glm::sqrt(magSq);
+//     auto axis = vel / mag;
+//     rot = glm::angleAxis(dt*mag, axis) * rot;
+//     rot = glm::normalize(rot);
+// }
+
+
+
+
+// float
+// RigidBody::_computeTotalMass( KinematicState &st )
+// {
+//     float totalMass = 1.0f/state.invMass;
+
+//     for (auto *B: m_children)
+//     {
+//         totalMass += B->getMass();
+//     }
+
+//     return totalMass;
+// }
+
+
+// glm::vec3
+// RigidBody::_computeCOM( float totalMass )
+// {
+//     auto COM = glm::vec3(0.0f);
+
+//     for (auto *B: m_children)
+//     {
+//         COM += B->getMass() * B->state.pos;
+//     }
+
+//     COM += 1.0f/state.invMass * state.pos;
+
+//     return COM / totalMass;
+// }
+
+
+// glm::mat3
+// RigidBody::_computeIntertiaTensor( const glm::vec3 &COM )
+// {
+//     auto I = glm::mat3(1.0f);
+
+//     glm::vec3 r;
+//     float     m;
+    
+//     r  = state.pos - COM;
+//     m  = getMass();
+//     I += m * (glm::length2(r) * glm::mat3(1.0f) - glm::outerProduct(r, r));
+
+//     for (auto *B: m_children)
+//     {
+//         r  = B->state.pos - COM;
+//         m  = B->getMass();
+//         I += m * (glm::length2(r) * glm::mat3(1.0f) - glm::outerProduct(r, r));
+//     }
+
+//     return I;
+// }
+
+
+std::pair<glm::vec3, glm::vec3>
+RigidBody::computeGravitationalAcceleration()
+{
+    auto &conf = m_world.config;
+
+    glm::vec3 G   = conf.substepFactor() * conf.gravity;
+    glm::vec3 lin = glm::vec3(0.0f);
+    glm::vec3 ang = glm::vec3(0.0f);
+
+    // const auto do_thing = [this, G, &lin, &ang]( RigidBody *B )
+    // {
+    //     float factor = B->getMass() * state.invMass;
+    //     applyImpulseLinear(factor*G);
+    //     applyImpulseAngular(factor*G, B->state.COM);
+    // };
+
+    // do_thing(this);
+
+    // for (auto *B: m_children)
+    // {
+    //     do_thing(B);
+    // }
+
+    return std::make_pair(lin, ang);
+}
 
 
 glm::vec3
 RigidBody::computeAeroForcesLinear()
 {
     auto &conf = m_world.config;
-    float area = m_shape->getArea(state.linear.vel);
-    auto  drag = -conf.fluid_density * m_drag * area * state.linear.vel;
+    float area = shape.getArea(state.linear.vel);
+    auto  drag = -conf.fluid_density * state.drag * area * state.linear.vel;
 
     if (glm::length2(state.linear.vel) > 0.0f)
     {
@@ -116,192 +213,68 @@ glm::vec3
 RigidBody::computeAeroForcesAngular()
 {
     auto &conf = m_world.config;
-    auto  drag = -conf.fluid_density * m_drag * state.angular.vel;
+    auto  drag = -conf.fluid_density * state.drag * state.angular.vel;
 
     if (glm::length2(state.angular.vel) > 0.0f)
     {
         drag *= glm::length(state.angular.vel);
     }
-
+    
     return drag;
 }
 
 
-void
-RigidBody::_integrateLinear( float dt )
-{
-    const auto &conf = m_world.config;
-    const auto  grav = m_gravscale * conf.gravity;
-
-    glm::vec3 F = state.linear.F + computeAeroForcesLinear();
-
-    state.linear.acc  = F * invMass + grav;
-    state.linear.vel += dt*state.linear.acc;
-    state.pos        += dt*state.linear.vel;
-}
 
 
-void
-RigidBody::_integrateAngular( float dt )
-{
-    static constexpr float damping = 0.01f;
+static glm::vec3 Jtemp;
 
-    glm::vec3 F = state.angular.F + computeAeroForcesAngular();
+// void
+// RigidBody::addChild( RigidBody *B )
+// {
+//     B->m_parent = this;
+//     m_children.push_back(B);
 
-    state.angular.acc  = F;
-    state.angular.vel += dt * state.angular.acc;
-    state.angular.vel *= (1.0f - dt*damping);
+//     B->onCollisionEnter = [B](const phys::CollisionInfo &info)
+//     {
+//         B->_defaultOnCollisionEnter(info);
+//         // B->m_parent->applyImpulse(B->state.pos, Jtemp);
+//     };
 
-    float magSq = glm::length2(state.angular.vel);
-    if (magSq > 0.0f)
-    {
-        float mag = glm::sqrt(magSq);
-        if (mag < 1e-6f)
-        {
-           return; 
-        }
-
-        auto  axis = state.angular.vel / mag;
-        state.rot = glm::angleAxis(dt*mag, axis) * state.rot;
-        state.rot = glm::normalize(state.rot);
-    }
-}
+//     _onChange();
+// }
 
 
 
-void
-RigidBody::integrate( float dt )
-{
-    _onChange();
-    _integrateLinear(dt);
-    _integrateAngular(dt);
-    updateTransforms();
-}
+// void 
+// RigidBody::_defaultOnCollisionEnter( const CollisionInfo &info )
+// {
+//     // if (dynamic_cast<StaticBody*>(info.B.body) == nullptr)
+//     // {
+//     //     return;
+//     // }
 
+//     // auto &p = info.contactPoint;
+//     // auto &N = info.A.normal;
+//     // auto *A = dynamic_cast<RigidBody*>(info.A.body);
+//     // auto &stateA = A->state;
 
-void 
-RigidBody::applyTranslation( const glm::vec3 &v )
-{
-    state.pos += v;;
-}
+//     // auto *B = info.B.body;
+//     // auto &stateB = B->state;
 
+//     // float m1 = 1.0f / stateA.invMass;
+//     // float m2 = 1.0f / stateB.invMass;
+//     // float e1 = 0.98f; // stateA.restitution;
+//     // float e2 = 0.98f; // stateB.restitution;
 
-void
-RigidBody::applyImpulse( const glm::vec3 &point, const glm::vec3 &impulse )
-{
-    state.linear.vel += impulse;
-    applyTorque(point, impulse);
-}
+//     // glm::vec3 Av  = stateA.linear.vel;
+//     // glm::vec3 Bv  = stateB.linear.vel;
+//     // glm::vec3 Vr  = Av - Bv;
+//     // float     vj  = -(1.0f + e1) * glm::dot(Vr, N) * (m1 + m2);
+//     // glm::vec3 J   = vj * N;
 
+//     // Jtemp = J;
 
-void 
-RigidBody::applyImpulseLinear( const glm::vec3 &J )
-{
-    state.linear.vel += J;
-}
+//     // stateA.applyImpulseLinear(J/m1);
+//     // stateA.applyTranslation(-info.A.penetration);
 
-
-void 
-RigidBody::applyImpulseAngular( const glm::vec3 &J )
-{
-    state.angular.vel += state.invT3 * J;
-}
-
-
-void
-RigidBody::applyForceLinear( const glm::vec3 &F )
-{
-    state.linear.F += F;
-}
-
-
-void
-RigidBody::applyForceAngular( const glm::vec3 &F )
-{
-    state.angular.F += state.invT3 * F;
-}
-
-
-void
-RigidBody::applyTorque( const glm::vec3 &point, const glm::vec3 &F )
-{
-    // glm::vec3 P_local = glm::inverse(state.T) * glm::vec4(point, 1.0f);
-    // glm::vec3 F_local = glm::inverse(state.T) * glm::vec4(F, 0.0f);
-
-    // glm::vec3 r_local   = P_local - glm::vec3(0.0f);
-    // glm::vec3 tau_local = glm::cross(r_local, F_local);
-    // state.tau += tau_local;
-
-    glm::vec3 r   = point - state.pos;
-    glm::vec3 tau = glm::cross(r, F);
-    state.angular.F += Inertia.inverseWorld * tau;
-}
-
-
-void
-RigidBody::clearForces()
-{
-    state.linear.F  *= 0.0f;
-    state.linear.J  *= 0.0f;
-    state.angular.F *= 0.0f;
-    state.angular.J *= 0.0f;
-    state.tau       *= 0.0f;
-}
-
-
-
-
-void
-RigidBody::setMass( float m )
-{
-    Body::setMass(m);
-
-    // auto *P = dynamic_cast<RigidBody*>(m_parent);
-
-    // if (P)
-    // {
-    //     P->_onChange();
-    // }
-}
-
-
-
-
-
-
-
-
-
-
-
-void 
-RigidBody::_defaultOnCollisionEnter( const CollisionInfo &info )
-{
-    if (dynamic_cast<StaticBody*>(info.B.body) == nullptr)
-    {
-        return;
-    }
-
-    auto &p = info.contactPoint;
-    auto &N = info.A.normal;
-    auto *A = dynamic_cast<RigidBody*>(info.A.body);
-    auto *B = info.B.body;
-
-    float mi1 = A->invMass;
-    float mi2 = B->invMass;
-    float e1 = A->getRestitution();
-    float e2 = B->getRestitution();
-
-    glm::vec3 Av  = A->state.linear.vel;
-    glm::vec3 Bv  = B->state.linear.vel;
-    glm::vec3 Vr  = Av - Bv;
-    float     vj  = -(1.0f + e1) * glm::dot(Vr, N);
-    glm::vec3 J   = vj / (mi1 + mi2) * N;
-    
-
-    A->applyImpulseLinear(mi1*J);
-    // A->applyTranslation(-info.A.penetration);
-
-    // B->applyImpulseLinear(mi2*J);
-
-}
+// }

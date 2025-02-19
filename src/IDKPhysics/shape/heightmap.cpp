@@ -1,8 +1,4 @@
 #include "heightmap.hpp"
-#include "sphere.hpp"
-#include "AABB.hpp"
-#include "OBB.hpp"
-#include "collision.hpp"
 #include <IDKPhysics/body/body.hpp>
 #include <IDKGraphics/terrain/terrain.hpp>
 #include "../query.hpp"
@@ -12,6 +8,7 @@ using namespace idk::phys;
 
 // ShapeHeightmap::ShapeHeightmap( uint32_t w, uint32_t h, void *pixels )
 ShapeHeightmap::ShapeHeightmap()
+:   Shape(SHAPE_HEIGHTMAP)
 {
 
 }
@@ -31,12 +28,12 @@ ShapeHeightmap::getArea( const glm::vec3 &dir )
 }
 
 
-bool
-ShapeHeightmap::collides( Shape *other, CollisionInfo *info )
-{
-    SHAPE_COLLISION_LAZY(Heightmap, AABB);
-    SHAPE_COLLISION_LAZY(Heightmap, OBB);
-    SHAPE_COLLISION_LAZY(Heightmap, Sphere);
-    return false;
-}
+// bool
+// ShapeHeightmap::collides( Shape *other, CollisionInfo *info )
+// {
+//     // SHAPE_COLLISION_LAZY(Heightmap, AABB);
+//     // SHAPE_COLLISION_LAZY(Heightmap, OBB);
+//     SHAPE_COLLISION_LAZY(Heightmap, Sphere);
+//     return false;
+// }
 
